@@ -21,36 +21,50 @@ function generateRandomString() {
     randomString += elements.charAt(Math.floor(Math.random() * elementsLength));
   } return randomString;
 };
-console.log(generateRandomString())
 
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
 app.get("/urls/new", (req,res) => {
   res.render("urls_new");
 });
+
 app.get("/urls/:shortURL", (req,res) =>{
   const templateVars = { shortURL: req.params.shortURL,longURL: req.params.longURL };
   res.render("urls_show", templateVars);
-})
+});
+
+/*recieves a POST request to /urls, and responds with redirection 
+to /urls/:shortURL, where shortURL is the random string generated*/
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = longURL
-  console.log(urlDatabase);  // Log the POST request body to the console
-  res.redirect(`/urls/${shortURL}`);   
+  res.redirect(`/urls/${shortURL}`);     
 });
+
+//redirect the shortURL to orginal longUrl page
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL]
+  res.redirect(longURL);
+});
+
+//example of using html code to send to browser
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+//Server Listen
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
