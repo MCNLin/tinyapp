@@ -18,7 +18,7 @@ function generateRandomString() {
   const elementsLength = elements.length;
   let randomString = '';
   for (let i = 0; i < 6; i++) {
-    randomString += characters.charAt(Math.floor(Math.random() * elementsLength));
+    randomString += elements.charAt(Math.floor(Math.random() * elementsLength));
   } return randomString;
 };
 console.log(generateRandomString())
