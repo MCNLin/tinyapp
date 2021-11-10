@@ -13,12 +13,24 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
 //random sting generator
-function generateRandomString() {
+function generateRandomString(length) {
   const elements = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const elementsLength = elements.length;
   let randomString = '';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < length; i++) {
     randomString += elements.charAt(Math.floor(Math.random() * elementsLength));
   } return randomString;
 }
@@ -32,6 +44,7 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  console.log("urls")
   const username = req.cookies["username"];
   const templateVars = {
     urls: urlDatabase,
@@ -63,7 +76,7 @@ app.get("/urls/:shortURL", (req,res) =>{
 to /urls/:shortURL, where shortURL is the random string generated*/
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
-  const shortURL = generateRandomString();
+  const shortURL = generateRandomString(6);
   urlDatabase[shortURL] = longURL;
   res.redirect(`/urls/${shortURL}`);
 });
@@ -101,6 +114,22 @@ app.post("/logout", (req, res) => {
   const username = req.body.username;
   res.clearCookie('username', username);
   res.redirect("/urls");
+});
+
+app.get("/register", (req,res) => {
+  const templateVars = {username: req.cookies.username}
+  res.render("urls_register",templateVars)
+});
+
+app.post("/register", (req,res) =>{
+  console.log("helllooooo")
+  const email = req.body.email;
+  const password = req.body.password;
+  const userId = generateRandomString(6);
+  console.log("here:",email, password, userId)
+  users[userId] = {id:userId, email, password}
+  res.cookie("username",email);
+  res.redirect("/urls")
 });
 
 //example of using html code to send to browser
