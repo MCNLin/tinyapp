@@ -26,25 +26,36 @@ function generateRandomString() {
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
-
+//JSON URL database
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const username = req.cookies["username"];
+  const templateVars = { 
+    urls: urlDatabase,
+    username : username };
   res.render("urls_index", templateVars);
 });
 
-app.get("/urls/new", (req,res) => {
-  res.render("urls_new");
-});
 
-app.get("/urls/:shortURL", (req,res) =>{
+app.get("/urls/new", (req, res) => {
+  const username = req.cookies["username"];
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"]
+    username: username
+  };
+  res.render("urls_new", templateVars);
+});
+
+app.get("/urls/:shortURL", (req,res) =>{
+  const username = req.cookies["username"]
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    username: username
   };
   res.render("urls_show", templateVars);
 });
@@ -63,13 +74,13 @@ app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL]
   res.redirect(longURL);
 });
-//delete path
+//delete a shortURL from userlist
 app.post('/urls/:shortURL/delete', (req, res) =>{
   const shortURL = req.params.shortURL; 
   delete urlDatabase[shortURL];
   res.redirect('/urls');
 });
-//edit path
+//Edit/update the url for the shortURL page
 app.post("/urls/:shortURL", (req,res) => {
   const shortURL = req.params.shortURL;  
   const longURL = req.body.longURL;
@@ -78,7 +89,8 @@ app.post("/urls/:shortURL", (req,res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
+  let username = req.body.username
+  res.cookie("username", username);
   res.redirect("/urls");
 }); 
 
