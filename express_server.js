@@ -106,6 +106,12 @@ app.post("/urls/:shortURL", (req,res) => {
   urlDatabase[shortURL] = longURL;
   res.redirect('/urls');
 });
+app.get("/login",(req,res) => {
+  const templateVars = {
+    user : req.cookies["user"]
+  }
+  res.render("urls_login",templateVars)
+});
 
 //add cookie when login
 app.post("/login", (req, res) => {
