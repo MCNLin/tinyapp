@@ -19,17 +19,16 @@
         <button type="submit" class="btn btn-primary" style="margin-left: 1em;">Logout</button>
       </div>
     </form>
-    <% } else { %>
-      <form method="POST" class="form-inline" action="/login">
-        <div class="form-group mb-2">
-          <input class="form-control me-2" type="text" name="username" placeholder="username"
-              style="width: 300px; margin: 1em">
-            <button type="submit" class="btn btn-primary">Login</button>
+      <% } else { %>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+          <div class="navbar-nav">
+            <a class="nav-item nav-link" href="/login" style="margin: 1em">Login</a>
+            <a class="nav-item nav-link" href="/register" style="margin: 1em">Register</a>
           </div>
-        </form>
-        <% } %>
+        </div>
+      <% } %>
 
-          </div>
+        
   </nav>
   </form>
 </header>
