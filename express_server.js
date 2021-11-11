@@ -25,7 +25,14 @@ const users = {
     password: "dishwasher-funk"
   }
 }
-
+const emailLookup = function(email, userDB) {
+  for (const user in userDB) {
+    if (userDB[user].email === email) {
+      return true;
+    }
+  }
+  return false;
+}
 //random sting generator
 function generateRandomString(length) {
   const elements = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -113,18 +120,24 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req,res) =>{
-  const user = { 
+  const enteredEmail = req.body.email;
+  const enteredPassword = req.body.password;
+
+  if (!enteredEmail || !enteredPassword) {
+    res.status(400).send("400: Invalid email/password");
+  } else if (emailLookup(enteredEmail, users)) {
+    res.status(400).send("400: Account already exists");
+  } else {
+  const user = {
     id: generateRandomString(6),
     email: req.body.email,
-    password : req.body.password
+    password: req.body.password,
   };
-  if(user["email"] === ""|| user["password"] === "") {
-    res.status(400).send("Please type in an email and/or password");
-  } 
-  
   users[user.id] = user;
-  res.cookie("user",user);
-  res.redirect("/urls")
+  console.log(users);
+  res.cookie("user", user);
+  res.redirect('/urls');
+}
 });
 
 app.get("/register", (req,res) => {
