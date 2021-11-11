@@ -25,6 +25,7 @@ const users = {
     password: "dishwasher-funk"
   }
 }
+
 //random sting generator
 function generateRandomString(length) {
   const elements = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -111,21 +112,26 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
-app.get("/register", (req,res) => {
-  const templateVars = {user : req.cookies["user"]}
-  res.render("urls_register",templateVars)
-});
-
 app.post("/register", (req,res) =>{
   const user = { 
     id: generateRandomString(6),
     email: req.body.email,
     password : req.body.password
   };
+  if(user["email"] === ""|| user["password"] === "") {
+    res.status(400).send("Please type in an email and/or password");
+  } 
+  
   users[user.id] = user;
   res.cookie("user",user);
   res.redirect("/urls")
 });
+
+app.get("/register", (req,res) => {
+  const templateVars = {user : req.cookies["user"]}
+  res.render("urls_register",templateVars)
+});
+
 
 //example of using html code to send to browser
 app.get("/hello", (req, res) => {
@@ -136,5 +142,4 @@ app.get("/hello", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
 
