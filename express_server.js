@@ -5,7 +5,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const urlDatabase = {
@@ -13,22 +13,23 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
 }
-const emailLookup = function(email, userDB) {
-  for (const user in userDB) {
-    if (userDB[user].email === email) {
-      return true;
+
+const getUserByEmail = function (email, database) {
+  for (const user in database) {
+    if (database[user].email === email) {
+      return user; // true
     }
   }
   return false;
@@ -54,25 +55,28 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user : req.cookies["user"] };
+    user_id: req.cookies["user_id"],
+    users
+  };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
 
   const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    user : req.cookies["user"]
+    urls: urlDatabase,
+    user_id: req.cookies["user_id"],
+    users
   };
   res.render("urls_new", templateVars);
 });
 
-app.get("/urls/:shortURL", (req,res) =>{
+app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    user : req.cookies["user"]
+    user_id: req.cookies["user_id"],
+    users
   };
   res.render("urls_show", templateVars);
 });
@@ -93,62 +97,79 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 //delete a shortURL from userlist
-app.post('/urls/:shortURL/delete', (req, res) =>{
+app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect('/urls');
 });
 
 //Edit/update the url for the shortURL page
-app.post("/urls/:shortURL", (req,res) => {
+app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL;
   res.redirect('/urls');
 });
-app.get("/login",(req,res) => {
+app.get("/login", (req, res) => {
   const templateVars = {
-    user : req.cookies["user"]
+    user_id: req.cookies["user_id"],
+    users
   }
-  res.render("urls_login",templateVars)
+  res.render("urls_login", templateVars)
 });
 
 //add cookie when login
 app.post("/login", (req, res) => {
-  res.cookie("user", req.body.user);
-  res.redirect("/urls");
+  const enteredEmail = req.body.email;
+  const enteredPassword = req.body.password;
+
+  if (!enteredEmail) { //if no email is entered.  // "user@example.com"
+    return res.status(403).send("Please enter a valid email");
+  } else if (getUserByEmail(enteredEmail, users)) { // if email matches our records, returns "user/key which has the same value as the user.id" 
+    const user = getUserByEmail(enteredEmail, users);
+    if (enteredPassword !== users[user].password) {
+      return res.status(403).send("Invalid Password");
+    } else {
+      res.cookie("user_id", user);
+      res.redirect('/urls');
+    }
+  } else {
+    return res.status(400).send("Email not found")
+  }
 });
 
 //delete cookie when logout
 app.post("/logout", (req, res) => {
-  res.clearCookie('user', req.body.user);
+  res.clearCookie('user_id', req.cookies["user_id"]);
   res.redirect("/urls");
 });
 
-app.post("/register", (req,res) =>{
+app.post("/register", (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
 
   if (!enteredEmail || !enteredPassword) {
     res.status(400).send("400: Invalid email/password");
-  } else if (emailLookup(enteredEmail, users)) {
+  } else if (getUserByEmail(enteredEmail, users)) {
     res.status(400).send("400: Account already exists");
   } else {
-  const user = {
-    id: generateRandomString(6),
-    email: req.body.email,
-    password: req.body.password,
-  };
-  users[user.id] = user;
-  console.log(users);
-  res.cookie("user", user);
-  res.redirect('/urls');
-}
+    const user = {
+      id: generateRandomString(6),
+      email: req.body.email,
+      password: req.body.password,
+    };
+    users[user.id] = user;
+    console.log(users);
+    res.cookie("user_id", user.id);
+    res.redirect('/urls');
+  }
 });
 
-app.get("/register", (req,res) => {
-  const templateVars = {user : req.cookies["user"]}
-  res.render("urls_register",templateVars)
+app.get("/register", (req, res) => {
+  const templateVars = { 
+    user_id: req.cookies["user_id"],
+    users }
+  res.render("urls_register", templateVars)
 });
 
 
