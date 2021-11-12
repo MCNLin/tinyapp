@@ -26,13 +26,19 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "123"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
+  },
+  "aJ48lW":{
+    id: "aJ48lW",
+    email: "user3@example.com",
+    password: "123"
   }
+
 }
 
 const getUserByEmail = function (email, database) {
@@ -43,6 +49,19 @@ const getUserByEmail = function (email, database) {
   }
   return false;
 }
+const urlsForUser = function (id) {
+  const userURLs = {};
+  if(!id) {
+    return null;
+  }
+  for(let key in urlDatabase) {
+    if(urlDatabase[key].userID === id) {
+      userURLs[key] = urlDatabase[key];
+    } 
+  }
+  return userURLs
+}
+
 //random sting generator
 function generateRandomString(length) {
   const elements = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -62,11 +81,17 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  if(!req.cookies["user_id"]){
+    return res.status(401).send("You must <a href='/login'>login</a> first.")
+  }
+  const userShortUrl = urlsForUser(req.cookies["user_id"])
+
   const templateVars = {
-    urls: urlDatabase,
+    urls: userShortUrl,
     user_id: req.cookies["user_id"],
     users
   };
+  
   res.render("urls_index", templateVars);
 });
 
@@ -119,20 +144,37 @@ app.get("/u/:shortURL", (req, res) => {
 
 //delete a shortURL from userlist
 app.post('/urls/:shortURL/delete', (req, res) => {
+  if(!req.cookies["user_id"]) {
+    return res.status(401).send("You must <a href='/login'>login</a> first.")
+  }
   const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect('/urls');
+  const usersURL = urlsForUser(req.cookies["user_id"])
+  if(shortURL in usersURL) {
+    delete urlDatabase[shortURL];
+    res.redirect('/urls'); 
+  } else {
+  return res.status(404).send("Not Authorized")
+  }
 });
 
 //Edit/update the url for the shortURL page
 app.post("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
+  if(!req.cookies["user_id"]) {
+    return res.status(401).send("You must <a href='/login'>login</a> first.")
+  }
   const longURL = req.body.longURL;
+  const shortURL = req.params.shortURL;
+  const usersURL = urlsForUser(req.cookies["user_id"])
+  if(shortURL in usersURL) {
+    console.log(longURL);
+    // const longURL = req.body.longURL;
   urlDatabase[shortURL] = {
     longURL,
     userID: req.cookies["user_id"]
   };
-  res.redirect('/urls');
+  res.redirect("/urls") 
+  }
+  
 });
 
 app.get("/login", (req, res) => {
