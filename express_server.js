@@ -1,4 +1,5 @@
 const express = require("express");
+var cookieSession = require('cookie-session')
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
@@ -12,7 +13,10 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"))
-
+app.use(cookieSession({
+  name: 'session',
+  keys: ["youCanDoIt","dontGiveUp"]
+}));
 
 const urlDatabase = {
   b6UTxQ: {
@@ -197,11 +201,13 @@ app.post("/login", (req, res) => {
   if (!enteredEmail) { //if no email is entered.  // "user@example.com"
     return res.status(403).send("Please enter a valid email");
   } else if (getUserByEmail(enteredEmail, users)) { // if email matches our records, returns "user/key which has the same value as the user.id" 
-    const user = getUserByEmail(enteredEmail, users);
-    if (enteredPassword !== users[user].password) {
+    const userID = getUserByEmail(enteredEmail, users);
+    const user = users[userID]
+    console.log("user--->", user)
+    if (!bcrypt.compareSync(enteredPassword,user.password)) {
       return res.status(403).send("Invalid Password");
     } else {
-      res.cookie("user_id", user);
+      res.cookie("user_id", userID);
       res.redirect('/urls');
     }
   } else {
@@ -222,7 +228,7 @@ app.post("/register", (req, res) => {
   const hashPassword = bcrypt.hashSync(enteredPassword,10)
 
   if (!enteredEmail || !enteredPassword) {
-    res.status(400).send("400: Invalid email/password");
+    res.status(400).send("400: Account already exists");
   } else if (getUserByEmail(enteredEmail, users)) {
     res.status(400).send("400: Account already exists");
   } else {
@@ -255,4 +261,3 @@ app.get("/hello", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
