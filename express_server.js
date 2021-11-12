@@ -2,6 +2,9 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
+const bcrypt = require('bcryptjs');
+
+
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -103,8 +106,9 @@ app.get("/urls/new", (req, res) => {
     users
   };
   if(!req.cookies["user_id"]) {//redirects if not registered
-    res.redirect("/login");
+    return res.redirect("/login");
   }
+  
   res.render("urls_new", templateVars);
 });
 
@@ -212,8 +216,10 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  let id = generateRandomString(6);
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
+  const hashPassword = bcrypt.hashSync(enteredPassword,10)
 
   if (!enteredEmail || !enteredPassword) {
     res.status(400).send("400: Invalid email/password");
@@ -223,7 +229,7 @@ app.post("/register", (req, res) => {
     const user = {
       id: generateRandomString(6),
       email: req.body.email,
-      password: req.body.password,
+      password: hashPassword
     };
     users[user.id] = user;
     console.log(users);
