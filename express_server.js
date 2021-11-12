@@ -94,8 +94,8 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
-  console.log("userID-------------->",userID)
-  console.log("users----->",users)
+  // console.log("userID-------------->",userID)
+  // console.log("users----->",users)
   if(!userID){
     return res.status(401).send("You must <a href='/login'>login</a> first.")
   }
@@ -145,7 +145,6 @@ app.post("/urls", (req, res) => {
     longURL,
     userID: userID
   };
-  console.log("urlDatabase:",urlDatabase)
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -153,7 +152,7 @@ app.post("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const urlObj = urlDatabase[req.params.shortURL]
   const longURL =  urlObj? urlObj.longURL : null
-  console.log(longURL)
+  // console.log(longURL)
   if(!longURL){
     return res.status(404).send("URL not found")
   }
@@ -186,7 +185,7 @@ app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const usersURL = urlsForUser(userID)
   if(shortURL in usersURL) {
-    console.log(longURL);
+    // console.log(longURL);
     // const longURL = req.body.longURL;
   urlDatabase[shortURL] = {
     longURL,
@@ -202,9 +201,11 @@ app.get("/login", (req, res) => {
   if(userID) {
     res.redirect("/urls")
   }
+
   const templateVars = {
     user_id: userID,
     users
+
   }
   res.render("urls_login", templateVars)
 });
