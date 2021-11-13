@@ -53,6 +53,7 @@ users["user2RandomID"].password = bcrypt.hashSync('dishwasher-funk',10);
 users["aJ48lW"].password = bcrypt.hashSync('123',10);
 
 //=========================== GET ROUTES ========================================
+
 app.get("/", (req, res) => {
   const userID = req.session.user_id;
   if (userID) {
@@ -81,10 +82,11 @@ app.get("/urls", (req, res) => {
   
   res.render("urls_index", templateVars);
 });
+
 //Login Page
 app.get("/login", (req, res) => {
   const userID = req.session.user_id;
-  if (userID) { 
+  if (userID) {
     res.redirect("/urls");
   }
   const templateVars = {
@@ -93,6 +95,7 @@ app.get("/login", (req, res) => {
   };
   res.render("urls_login", templateVars);
 });
+
 //Registration Page
 app.get("/register", (req, res) => {
   const userID = req.session.user_id;
@@ -105,6 +108,7 @@ app.get("/register", (req, res) => {
     users };
   res.render("urls_register", templateVars);
 });
+
 //goes to create tinyurl page
 app.get("/urls/new", (req, res) => {
   const userID = req.session.user_id;
@@ -120,26 +124,24 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+//shows users saved urls as well as check if user has access to the urls
 app.get("/urls/:shortURL", (req, res) => {
-  const userId = req.session.user_id;
-  const user = users[userId];
+  const userID = req.session.user_id;
   const shortURL = req.params.shortURL;
   const urlObject = urlDatabase[shortURL];
-
+  
   if (!urlObject) {
-
-    return res.send("invalid shortURL");
+    return res.send("Unauthorized Access");
   }
-
-  if (urlObject.userID !== userId) {
-    return res.send("This object belongs to another user");
+  if (urlObject.userID !== userID) {
+    return res.send("Unauthorized Access");
   }
-                     
-  if (urlObject.userID === userId) {
+  if (urlObject.userID === userID) {
     const templateVars = {
       shortURL,
-      longURL: urlObject.longURL,     
-      user
+      longURL: urlObject.longURL,
+      users,
+      user_id: userID
     };
     res.render("urls_show", templateVars);
   }
@@ -176,7 +178,7 @@ app.post("/login", (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
 
-  if (!enteredEmail) { 
+  if (!enteredEmail) {
     return res.status(403).send("Please enter a valid email");
   } else if (getUserByEmail(enteredEmail, users)) { //
     const userID = getUserByEmail(enteredEmail, users);
@@ -191,6 +193,7 @@ app.post("/login", (req, res) => {
     return res.status(400).send("Email not found");
   }
 });
+
 //checks to see if email/password exist in database, if not create a new account
 app.post("/register", (req, res) => {
   const enteredEmail = req.body.email;
@@ -228,7 +231,7 @@ app.post("/urls/:shortURL", (req, res) => {
       userID: userID
     };
     res.redirect("/urls");
-  } 
+  }
 });
 
 //delete a shortURL from own userlist
