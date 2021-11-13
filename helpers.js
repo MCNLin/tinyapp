@@ -1,3 +1,7 @@
+
+//==================== Helper Functions ================================//
+
+//function to check if email is in the database
 const getUserByEmail = function(email, database) {
   for (const user in database) {
     if (database[user].email === email) {
@@ -7,7 +11,7 @@ const getUserByEmail = function(email, database) {
   return undefined;
 };
 
-//function to check if user 
+//function to check if it's user's url 
 const urlsForUser = function(id, urlDatabase) {
   const userURLs = {};
   if (!id) {
@@ -32,8 +36,3 @@ const generateRandomString = function(length) {
 };
 
 module.exports = {getUserByEmail, urlsForUser, generateRandomString};
-
-// //updated and hashed passwords for sample users
-// users["userRandomID"].password = bcrypt.hashSync('123',10);
-// users["user2RandomID"].password = bcrypt.hashSync('dishwasher-funk',10);
-// users["aJ48lW"].password = bcrypt.hashSync('123',10);
