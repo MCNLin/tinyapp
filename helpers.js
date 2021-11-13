@@ -32,3 +32,8 @@ const generateRandomString = function(length) {
 };
 
 module.exports = {getUserByEmail, urlsForUser, generateRandomString};
+
+// //updated and hashed passwords for sample users
+// users["userRandomID"].password = bcrypt.hashSync('123',10);
+// users["user2RandomID"].password = bcrypt.hashSync('dishwasher-funk',10);
+// users["aJ48lW"].password = bcrypt.hashSync('123',10);

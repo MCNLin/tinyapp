@@ -121,19 +121,28 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const userID = req.session.user_id;
-  const usersURL = urlsForUser()
-  
-  if (!userID){
-    return res.status(404).send("Unauthorized Access, Please <a href='/login'>login</a>.")
+  const userId = req.session.user_id;
+  const user = users[userId];
+  const shortURL = req.params.shortURL;
+  const urlObject = urlDatabase[shortURL];
+
+  if (!urlObject) {
+
+    return res.send("invalid shortURL");
   }
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user_id: userID,
-    users
-  };
-  res.render("urls_show", templateVars);
+
+  if (urlObject.userID !== userId) {
+    return res.send("This object belongs to another user");
+  }
+                     
+  if (urlObject.userID === userId) {
+    const templateVars = {
+      shortURL,
+      longURL: urlObject.longURL,     
+      user
+    };
+    res.render("urls_show", templateVars);
+  }
 });
 
 //redirect the shortURL to orginal longUrl page
