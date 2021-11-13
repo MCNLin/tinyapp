@@ -14,11 +14,10 @@
     <% if(users[user_id]){ %>
       <form method="POST" class="form-inline" action="/logout">
         <div class="form-group mb-2">
-          <h4>Logged In As: <%= users[user_id].email %>
-        </h4>
-        <button type="submit" class="btn btn-primary" style="margin-left: 1em;">Logout</button>
-      </div>
-    </form>
+          <a class="navbar-brand">Logged In As: <%= users[user_id].email %></a>
+          <button type="submit" class="btn btn-primary" style="margin-left: 1em;">Logout</button>
+        </div>
+      </form>
       <% } else { %>
         <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
           <div class="navbar-nav">
@@ -26,9 +25,9 @@
             <a class="nav-item nav-link" href="/register" style="margin: 1em">Register</a>
           </div>
         </div>
-      <% } %>
+        <% } %>
 
-        
+
   </nav>
   </form>
 </header>
