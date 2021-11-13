@@ -17,6 +17,7 @@ app.use(cookieSession({
   keys: ["youCanDoIt"]
 }));
 
+
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -46,6 +47,12 @@ const users = {
   }
 };
 
+//updated and hashed passwords for sample users
+users["userRandomID"].password = bcrypt.hashSync('123',10);
+users["user2RandomID"].password = bcrypt.hashSync('dishwasher-funk',10);
+users["aJ48lW"].password = bcrypt.hashSync('123',10);
+
+//=========================== GET ROUTES ========================================
 app.get("/", (req, res) => {
   const userID = req.session.user_id;
   if (userID) {
@@ -62,7 +69,6 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
-    // return res.redirect("/login");
     return res.status(401).send("Please <a href='/login'>login</a> first.");
   }
   const userShortUrl = urlsForUser(userID, urlDatabase);
@@ -75,10 +81,10 @@ app.get("/urls", (req, res) => {
   
   res.render("urls_index", templateVars);
 });
-
+//Login Page
 app.get("/login", (req, res) => {
   const userID = req.session.user_id;
-  if (userID) {
+  if (userID) { 
     res.redirect("/urls");
   }
   const templateVars = {
@@ -87,19 +93,19 @@ app.get("/login", (req, res) => {
   };
   res.render("urls_login", templateVars);
 });
-
+//Registration Page
 app.get("/register", (req, res) => {
   const userID = req.session.user_id;
 
   if (userID) {
-    res.redirect("/urls");
+    res.redirect("/urls"); //if user is logged in, show their urls page
   }
-  const templateVars = {
+  const templateVars = {//else creates a new account
     user_id: userID,
     users };
   res.render("urls_register", templateVars);
 });
-
+//goes to create tinyurl page
 app.get("/urls/new", (req, res) => {
   const userID = req.session.user_id;
   const templateVars = {
@@ -116,6 +122,11 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const userID = req.session.user_id;
+  const usersURL = urlsForUser()
+  
+  if (!userID){
+    return res.status(404).send("Unauthorized Access, Please <a href='/login'>login</a>.")
+  }
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
@@ -135,6 +146,9 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+
+//=================== POST ROUTES ==============================
+
 /*recieves a POST request to /urls, and responds with redirection
 to /urls/:shortURL, where shortURL is the random string generated*/
 app.post("/urls", (req, res) => {
@@ -148,48 +162,14 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-//delete a shortURL from userlist
-app.post('/urls/:shortURL/delete', (req, res) => {
-  const userID = req.session.user_id;
-  if (!userID) {
-    return res.status(401).send("You must <a href='/login'>login</a> first.");
-  }
-  const shortURL = req.params.shortURL;
-  const usersURL = urlsForUser(userID, urlDatabase);
-  if (shortURL in usersURL) {
-    delete urlDatabase[shortURL];
-    res.redirect('/urls');
-  } else {
-    return res.status(404).send("Not Authorized");
-  }
-});
-
-//Edit/update the url for the shortURL page
-app.post("/urls/:shortURL", (req, res) => {
-  const userID = req.session.user_id;
-  if (!userID) {
-    return res.status(401).send("You must <a href='/login'>login</a> first.");
-  }
-  const longURL = req.body.longURL;
-  const shortURL = req.params.shortURL;
-  const usersURL = urlsForUser(userID, urlDatabase);
-  if (shortURL in usersURL) {
-    urlDatabase[shortURL] = {
-      longURL,
-      userID: userID
-    };
-    res.redirect("/urls");
-  } 
-});
-
-//add cookie when login
+//when client logs in, checks the database to ensure UN&PW match, then get access to page
 app.post("/login", (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
 
   if (!enteredEmail) { 
     return res.status(403).send("Please enter a valid email");
-  } else if (getUserByEmail(enteredEmail, users)) { 
+  } else if (getUserByEmail(enteredEmail, users)) { //
     const userID = getUserByEmail(enteredEmail, users);
     const user = users[userID];
     if (!bcrypt.compareSync(enteredPassword, user.password)) {
@@ -202,13 +182,7 @@ app.post("/login", (req, res) => {
     return res.status(400).send("Email not found");
   }
 });
-
-//delete cookie when logout
-app.post("/logout", (req, res) => {
-  req.session = null;
-  res.redirect("/urls");
-});
-
+//checks to see if email/password exist in database, if not create a new account
 app.post("/register", (req, res) => {
   const enteredEmail = req.body.email;
   const enteredPassword = req.body.password;
@@ -230,10 +204,46 @@ app.post("/register", (req, res) => {
   }
 });
 
-//example of using html code to send to browser
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+//Check to see if url is in user urldatabase, can edit
+app.post("/urls/:shortURL", (req, res) => {
+  const userID = req.session.user_id;
+  if (!userID) {
+    return res.status(401).send("You must <a href='/login'>login</a> first.");
+  }
+  const longURL = req.body.longURL;
+  const shortURL = req.params.shortURL;
+  const usersURL = urlsForUser(userID, urlDatabase);
+  if (shortURL in usersURL) {
+    urlDatabase[shortURL] = {
+      longURL,
+      userID: userID
+    };
+    res.redirect("/urls");
+  } 
 });
+
+//delete a shortURL from own userlist
+app.post('/urls/:shortURL/delete', (req, res) => {
+  const userID = req.session.user_id;
+  if (!userID) {
+    return res.status(401).send("You must <a href='/login'>login</a> first.");
+  }
+  const shortURL = req.params.shortURL;
+  const usersURL = urlsForUser(userID, urlDatabase);
+  if (shortURL in usersURL) {
+    delete urlDatabase[shortURL];
+    res.redirect('/urls');
+  } else {
+    return res.status(404).send("Not Authorized");
+  }
+});
+
+//delete cookie when logout
+app.post("/logout", (req, res) => {
+  req.session = null;
+  res.redirect("/urls");
+});
+
 
 //Server Listen
 app.listen(PORT, () => {
